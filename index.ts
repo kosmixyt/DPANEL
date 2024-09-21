@@ -7,6 +7,9 @@ import { SSL } from "./engine/ssl";
 import { PhpConfig } from "./engine/php";
 import { Container } from "./engine/container";
 import { Domain } from "./engine/domain";
+import { DbPermission } from "./engine/db/rights";
+import { Database } from "./engine/db/db";
+import { DbUser } from "./engine/db/user";
 const app = express();
 app.use(
   session({
@@ -21,7 +24,7 @@ export const AppDataSource = new DataSource({
   host: "localhost",
   port: 3306,
   synchronize: true,
-  entities: [User, Host, SSL, PhpConfig, Container, Domain, ReverseProxy, ErrorCodePage, Redirect],
+  entities: [User, Host, SSL, PhpConfig, Container, Domain, ReverseProxy, ErrorCodePage, Redirect, DbPermission, Database, DbUser],
   username: "root",
   password: "",
   database: "dpanel",

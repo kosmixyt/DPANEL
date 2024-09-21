@@ -7,7 +7,7 @@ import child_process from "child_process";
 import { Domain } from "./domain";
 import fs from "fs";
 import path from "path";
-import { BuildConfig, ValidateConfig } from "./webs/nginx";
+import { BuildConfig, ReloadConfig, ValidateConfig } from "./webs/nginx";
 
 @Entity()
 export class Host {
@@ -18,13 +18,11 @@ export class Host {
   indexes!: string;
   user!: User;
   @ManyToOne(() => Domain, (domain) => domain.nginxConfig)
-  // must always have the same domain at the index 0 and the same user
   domains!: Domain[];
   @OneToOne(() => SSL, (ssl) => ssl.host, { nullable: true })
   SSL!: SSL;
   @OneToOne(() => PhpConfig, (php) => php.Domain, { nullable: true })
   Php!: PhpConfig;
-
   @ManyToOne(() => ReverseProxy, (reverseProxy) => reverseProxy.host)
   ReverseProxies!: ReverseProxy[];
   @OneToMany(() => ErrorCodePage, (errorCodePage) => errorCodePage.host)
@@ -58,12 +56,21 @@ export class Host {
       }
     }
   }
-  async writeConfig() {
+  async writeConfig(rollbackConfig?: string) {
     const config = this.buildNginxConfig();
     fs.writeFileSync(this.configPath(), config);
     if (!ValidateConfig(this, this.user)) {
+      if (rollbackConfig) {
+        fs.writeFileSync(this.configPath(), rollbackConfig);
+        if (!ValidateConfig(this, this.user)) {
+          console.log("Rollback failed");
+          process.exit(100);
+        }
+        await ReloadConfig();
+      }
       throw new Error("Invalid config");
     }
+    await ReloadConfig();
   }
   IsRunning() {
     return fs.existsSync(path.join(NginxConfigPath, this.firstDomain().name));
@@ -107,13 +114,15 @@ export class Host {
         ssl.domains = this.domains;
         ssl.ExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
         console.log(`Ssl expire ${ssl.ExpiresAt}`);
-        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}`, ssl.fullchain());
-        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}`, ssl.privkey());
+        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}/fullchain.pem`, ssl.fullchain());
+        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}/privkey.pem`, ssl.privkey());
         ssl.save();
+        this.writeConfig();
       });
     });
   }
 }
+
 @Entity()
 export class ReverseProxy {
   @PrimaryGeneratedColumn("increment")

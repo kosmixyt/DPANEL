@@ -25,8 +25,14 @@ export class User {
   root() {
     return path.join(UserData, this.name);
   }
+  ssl() {
+    return path.join(UserData, this.name, "ssl");
+  }
+  logs() {
+    return path.join(UserData, this.name, "logs");
+  }
   async assert() {
-    const required_paths = [path.join(UserData, this.name), path.join(UserData, this.name, "ssl")];
+    const required_paths = [path.join(UserData, this.name), this.ssl(), this.logs()];
     for (const required_path of required_paths) {
       if (!fs.existsSync(required_path)) {
         fs.mkdirSync(required_path);

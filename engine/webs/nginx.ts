@@ -38,6 +38,8 @@ export function BuildConfig(host: Host, user: User): string {
   config += `    server_name ${host.domains.join(" ")};\n`;
   config += `    root ${host.root()};\n`;
   config += `    index ${host.indexes};\n`;
+  config += `    access_log ${path.join(user.logs(), `${host.firstDomain().name}access.log`)};\n`;
+  config += `    error_log ${path.join(user.logs(), `${host.firstDomain().name}_error.log`)};\n`;
   for (const proxy of host.ReverseProxies) {
     config += `    location ${proxy.Path} {\n`;
     config += `        proxy_pass ${proxy.Target};\n`;
@@ -73,7 +75,7 @@ export async function ValidateConfig(host: Host, user: User): Promise<boolean> {
     });
   });
 }
-export function ReloadConfig(host: Host, user: User): Promise<boolean> {
+export function ReloadConfig(): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const proc = child_process.spawn("sudo", ["systemctl", "reload", "nginx"]);
     var logs = Buffer.from("");

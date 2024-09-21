@@ -27,9 +27,13 @@ export class SSL {
     AppDataSource.manager.save(this);
   }
   fullchain() {
-    return path.join(this.host.root(), "ssl", this.host.firstDomain().name, "fullchain.pem");
+    if (!this.host) throw new Error("No host found");
+    if (!this.host.user) throw new Error("No user found");
+    return path.join(this.host.user.ssl(), `${this.host.firstDomain().name}_fullchain.pem`);
   }
   privkey() {
-    return path.join(this.host.root(), "ssl", this.host.firstDomain().name, "privkey.pem");
+    if (!this.host) throw new Error("No host found");
+    if (!this.host.user) throw new Error("No user found");
+    return path.join(this.host.user.ssl(), `${this.host.firstDomain().name}_privkey.pem`);
   }
 }

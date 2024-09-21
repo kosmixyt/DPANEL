@@ -9,6 +9,8 @@ export class User {
   @PrimaryGeneratedColumn("increment")
   id!: number;
   @Column()
+  email!: string;
+  @Column()
   name: string;
   @OneToMany(() => Host, (host) => host.user)
   domains!: Host[];
@@ -74,7 +76,7 @@ export class User {
   save() {
     AppDataSource.manager.save(this);
   }
-  createHost(domains: string[]) {
+  createHost(domains: string[]): () => void {
     const host = new Host();
     host.user = this;
     host.domains = domains.map((domain) => {
@@ -85,5 +87,6 @@ export class User {
     });
     host.assert();
     host.save();
+    return host.writeConfig.bind(host);
   }
 }

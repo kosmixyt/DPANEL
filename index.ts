@@ -2,7 +2,7 @@ import express from "express";
 import session from "express-session";
 import { DataSource } from "typeorm";
 import { User } from "./engine/user";
-import { Host } from "./engine/host";
+import { ErrorCodePage, Host, Redirect, ReverseProxy } from "./engine/host";
 import { SSL } from "./engine/ssl";
 import { PhpConfig } from "./engine/php";
 import { Container } from "./engine/container";
@@ -21,12 +21,14 @@ export const AppDataSource = new DataSource({
   host: "localhost",
   port: 3306,
   synchronize: true,
-  entities: [User, Host, SSL, PhpConfig, Container, Domain],
+  entities: [User, Host, SSL, PhpConfig, Container, Domain, ReverseProxy, ErrorCodePage, Redirect],
   username: "root",
   password: "",
   database: "dpanel",
 });
 export const UserData = "C:/Users/flocl/dpanel/data/";
+export const NginxConfigPath = "C:/Users/flocl/dpanel/nginx/";
+export const CertbotPath = "C:/Users/flocl/dpanel/certbot/certbot.exe";
 
 AppDataSource.initialize().then(async () => {
   app.listen(3000, () => {

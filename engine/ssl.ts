@@ -1,18 +1,21 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user";
 import { AppDataSource } from "..";
 import { Host } from "./host";
+import { Domain } from "./domain";
 
 @Entity()
 export class SSL {
   @PrimaryGeneratedColumn("increment")
   id!: number;
-  @ManyToMany(() => Host, (host) => host.ssl)
-  domains!: Host[];
   @Column()
   CreatedAt: Date = new Date();
   @Column()
   ExpiresAt: Date = new Date();
+  @OneToOne(() => Host, (host) => host.SSL)
+  host!: Host;
+  @ManyToOne(() => Domain, (user) => user.ssl)
+  domains!: Domain[];
   constructor() {}
   static create(domains: Host[], user: User): SSL {
     return new SSL();

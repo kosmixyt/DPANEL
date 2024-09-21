@@ -3,6 +3,7 @@ import { Host } from "./host";
 import { AppDataSource, UserData } from "..";
 import fs from "fs";
 import path from "path";
+import { Domain } from "./domain";
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("increment")
@@ -29,6 +30,18 @@ export class User {
         fs.mkdirSync(required_path);
       }
     }
+  }
+  async getAllHosts(relations: string[] = []) {
+    const hosts = AppDataSource.getRepository(Host).find({
+      relations: relations,
+      where: { user: { id: this.id } },
+    });
+    return hosts;
+  }
+  async getAllDomains(): Promise<Domain[]> {
+    const hosts = await this.getAllHosts(["domains"]);
+    const domains = hosts.map((host) => host.domains).flat();
+    return domains;
   }
   getAbsolute(gived: string) {
     const absolute_path = path.resolve(path.join(this.root(), gived));
@@ -60,5 +73,17 @@ export class User {
   }
   save() {
     AppDataSource.manager.save(this);
+  }
+  createHost(domains: string[]) {
+    const host = new Host();
+    host.user = this;
+    host.domains = domains.map((domain) => {
+      const domain_instance = new Domain();
+      domain_instance.nginxConfig = host;
+      domain_instance.name = domain;
+      return domain_instance;
+    });
+    host.assert();
+    host.save();
   }
 }

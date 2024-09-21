@@ -11,4 +11,6 @@ export class PhpConfig {
   memoryLimit!: string;
   @OneToOne(() => Host, (host) => host.Php)
   Domain!: Host;
+  @Column()
+  socket!: string;
 }

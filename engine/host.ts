@@ -7,12 +7,15 @@ import child_process from "child_process";
 import { Domain } from "./domain";
 import fs from "fs";
 import path from "path";
+import { BuildConfig, ValidateConfig } from "./webs/nginx";
 
 @Entity()
 export class Host {
   @PrimaryGeneratedColumn("increment")
   id!: number;
   @ManyToOne(() => User, (user) => user.domains)
+  @Column()
+  indexes!: string;
   user!: User;
   @ManyToOne(() => Domain, (domain) => domain.nginxConfig)
   // must always have the same domain at the index 0 and the same user
@@ -21,6 +24,7 @@ export class Host {
   SSL!: SSL;
   @OneToOne(() => PhpConfig, (php) => php.Domain, { nullable: true })
   Php!: PhpConfig;
+
   @ManyToOne(() => ReverseProxy, (reverseProxy) => reverseProxy.host)
   ReverseProxies!: ReverseProxy[];
   @OneToMany(() => ErrorCodePage, (errorCodePage) => errorCodePage.host)
@@ -35,11 +39,14 @@ export class Host {
     const url = new URL(name);
     return url.hostname === name;
   }
+  firstDomain(): Domain {
+    return this.domains[0];
+  }
   buildNginxConfig(): string {
-    return "";
+    return BuildConfig(this, this.user);
   }
   root() {
-    return path.join(this.user.root(), this.domains[0].name);
+    return path.join(this.user.root(), this.firstDomain().name);
   }
   assert() {
     if (!this.user) throw new Error("No user found");
@@ -51,17 +58,27 @@ export class Host {
       }
     }
   }
-  writeConfig() {
+  async writeConfig() {
     const config = this.buildNginxConfig();
-    const config_path = path.join(NginxConfigPath, this.domains[0].name);
-    fs.writeFileSync(config_path, config);
+    fs.writeFileSync(this.configPath(), config);
+    if (!ValidateConfig(this, this.user)) {
+      throw new Error("Invalid config");
+    }
+  }
+  IsRunning() {
+    return fs.existsSync(path.join(NginxConfigPath, this.firstDomain().name));
+  }
+  configPath() {
+    return path.join(NginxConfigPath, this.firstDomain().name);
   }
   requestSSL(user: User): Promise<string> {
     return new Promise((resolve, reject) => {
       if (this.SSL) {
         throw new Error("SSL already requested");
       }
-
+      if (!this.IsRunning()) {
+        throw new Error("Host is not running (must have a nginx config to request ssl)");
+      }
       var logs = Buffer.from("");
       const proc = child_process.spawn(CertbotPath, [
         "certonly",
@@ -87,8 +104,11 @@ export class Host {
         }
         var ssl = new SSL();
         ssl.host = this;
+        ssl.domains = this.domains;
         ssl.ExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
         console.log(`Ssl expire ${ssl.ExpiresAt}`);
+        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}`, ssl.fullchain());
+        fs.copyFileSync(`/etc/letsencrypt/live/${this.firstDomain().name}`, ssl.privkey());
         ssl.save();
       });
     });

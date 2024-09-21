@@ -1,19 +1,14 @@
-import { Column, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { User } from "./user";
-import { SSL } from "./ssl";
+import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Host } from "./host";
+import { Container } from "./container";
 
 @Entity()
 export class Domain {
   @PrimaryGeneratedColumn("increment")
   id!: number;
-  @Column()
-  name: string;
-  @ManyToOne(() => User, (user) => user.domains)
-  user: User;
-  @ManyToMany(() => SSL, (ssl) => ssl.domains)
-  ssl!: SSL[];
-  constructor(user: User, name: string) {
-    this.user = user;
-    this.name = name;
-  }
+  name!: string;
+  @OneToMany(() => Host, (host) => host.domains, { nullable: true })
+  nginxConfig!: Host;
+  @OneToOne(() => Container, (container) => container.domains, { nullable: true })
+  container!: Container;
 }

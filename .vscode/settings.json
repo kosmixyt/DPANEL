@@ -1,0 +1,15 @@
+{
+  "hide-files.files": ["package.json", "pnpm-lock.yaml", "node_modules", ".vscode"],
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "package.json": true,
+    "pnpm-lock.yaml": true,
+    "node_modules": true,
+    ".vscode": true
+  }
+}

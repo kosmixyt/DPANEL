@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { DbPermission } from "./rights";
 import { AppDataSource } from "../..";
 
@@ -6,6 +6,7 @@ import { AppDataSource } from "../..";
 export class Database {
   @PrimaryGeneratedColumn("increment")
   id!: number;
+  @Column()
   name!: string;
   @ManyToOne(() => DbPermission, (perm) => perm.dbs)
   permissions!: DbPermission[];

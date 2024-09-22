@@ -4,6 +4,7 @@ import { DataSource } from "typeorm";
 import { User } from "./engine/user";
 import { ErrorCodePage, Host, Redirect, ReverseProxy } from "./engine/host";
 import { SSL } from "./engine/ssl";
+import 'dotenv/config'
 import { PhpConfig } from "./engine/php";
 import { Container } from "./engine/container";
 import { Domain } from "./engine/domain";
@@ -19,19 +20,20 @@ app.use(
     cookie: { secure: true },
   })
 );
+
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: "localhost",
-  port: 3306,
   synchronize: true,
+  port:  3306,
   entities: [User, Host, SSL, PhpConfig, Container, Domain, ReverseProxy, ErrorCodePage, Redirect, DbPermission, Database, DbUser],
-  username: "root",
-  password: "",
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
   database: "dpanel",
 });
-export const UserData = "C:/Users/flocl/dpanel/data/";
-export const NginxConfigPath = "C:/Users/flocl/dpanel/nginx/";
-export const CertbotPath = "C:/Users/flocl/dpanel/certbot/certbot.exe";
+export const UserData = "/DPANEL/data/";
+export const NginxConfigPath = "/etc/nginx/sites-enabled/";
+export const CertbotPath = "certbot";
 
 AppDataSource.initialize().then(async () => {
   app.listen(3000, () => {

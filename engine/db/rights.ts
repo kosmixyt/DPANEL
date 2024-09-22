@@ -2,9 +2,11 @@ import { Column, Entity, OneToMany } from "typeorm";
 import { DbUser } from "./user";
 import { Database } from "./db";
 import { AppDataSource } from "../..";
+import { PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class DbPermission {
+  @PrimaryGeneratedColumn("increment")
   id!: number;
   @OneToMany(() => DbUser, (dbuser) => dbuser.permissions)
   user!: DbUser;

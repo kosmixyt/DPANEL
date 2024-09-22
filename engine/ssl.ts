@@ -23,8 +23,8 @@ export class SSL {
   static create(domains: Host[], user: User): SSL {
     return new SSL();
   }
-  save() {
-    AppDataSource.manager.save(this);
+  async save() {
+    await AppDataSource.manager.save(this);
   }
   fullchain() {
     if (!this.host) throw new Error("No host found");

@@ -13,6 +13,7 @@ export class Domain {
   nginxConfig!: Host;
   @OneToMany(() => SSL, (ssl) => ssl.domains, { nullable: true })
   ssl!: SSL;
+  emailDisabled!: boolean;
   getController(): Host {
     return this.nginxConfig;
   }

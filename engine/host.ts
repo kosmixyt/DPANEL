@@ -30,8 +30,8 @@ export class Host {
   @OneToMany(() => Redirect, (redirect) => redirect.host)
   Redirects!: Redirect[];
 
-  save() {
-    AppDataSource.manager.save(this);
+  async save() {
+    await AppDataSource.manager.save(this);
   }
   static ValidName(name: string): boolean {
     const url = new URL(name);

@@ -79,8 +79,8 @@ export class User {
   static async getAll() {
     return await AppDataSource.getRepository(User).find();
   }
-  save() {
-    AppDataSource.manager.save(this);
+  async save() {
+    await AppDataSource.manager.save(this);
   }
   createHost(domains: string[]): () => void {
     const host = new Host();

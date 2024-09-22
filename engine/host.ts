@@ -7,7 +7,7 @@ import child_process from "child_process";
 import { Domain } from "./domain";
 import fs from "fs";
 import path from "path";
-import { BuildConfig, ReloadConfig, ValidateConfig } from "./webs/nginx";
+import { BuildConfig, ReloadConfig, ValidateConfig } from "./os/nginx";
 
 @Entity()
 export class Host {

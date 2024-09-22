@@ -2,6 +2,7 @@ import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typ
 import { Host } from "./host";
 import { Container } from "./container";
 import { SSL } from "./ssl";
+import { EmailController } from "./mail/email";
 
 @Entity()
 export class Domain {
@@ -13,7 +14,16 @@ export class Domain {
   nginxConfig!: Host;
   @OneToMany(() => SSL, (ssl) => ssl.domains, { nullable: true })
   ssl!: SSL;
+  @Column()
   emailDisabled!: boolean;
+  @OneToOne(() => EmailController, (controller) => controller.Domain)
+  emailController!: EmailController;
+  getMailController() {
+    if (this.emailDisabled) {
+      throw new Error("Email is disabled for this domain");
+    }
+    return this.emailController;
+  }
   getController(): Host {
     return this.nginxConfig;
   }

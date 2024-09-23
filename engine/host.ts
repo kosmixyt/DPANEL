@@ -31,6 +31,16 @@ export class Host {
   ErrorCodePages!: ErrorCodePage[];
   @OneToMany(() => Redirect, (redirect) => redirect.host)
   Redirects!: Redirect[];
+  @Column()
+  Gzip!: boolean;
+  @Column()
+  GzipTypes!: string;
+  @Column()
+  GzipLevel!: number;
+  @Column()
+  GzipMinLength!: number;
+  @Column()
+  MaxBodySize!: number;
 
   async save() {
     await AppDataSource.manager.save(this);
@@ -149,7 +159,11 @@ export class ReverseProxy {
   Target!: string;
   @ManyToOne(() => Host, (host) => host.ReverseProxies)
   host!: Host;
+  @Column()
+  Timeout!: number;
+
 }
+
 
 @Entity()
 export class ErrorCodePage {

@@ -11,6 +11,7 @@ import { Domain } from "./engine/domain";
 import { DbPermission } from "./engine/db/rights";
 import { Database } from "./engine/db/db";
 import { DbUser } from "./engine/db/user";
+import dns from "dns"
 const app = express();
 app.use(
   session({
@@ -34,6 +35,7 @@ export const AppDataSource = new DataSource({
 export const UserData = "/DPANEL/data/";
 export const NginxConfigPath = "/etc/nginx/sites-enabled/";
 export const CertbotPath = "certbot";
+export const PUBLIC_SERVER_IP = "82.65.99.194"
 
 AppDataSource.initialize().then(async () => {
   app.listen(3000, () => {
@@ -43,3 +45,19 @@ AppDataSource.initialize().then(async () => {
     const user = await new User("admin").Init();
   }
 });
+export async function Resolve4(name: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    dns.resolve4(name, (err, addresses) => {
+      if (err) reject(err);
+      resolve(addresses);
+    });
+  });
+}
+export async function Resolve6(name: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    dns.resolve6(name, (err, addresses) => {
+      if (err) reject(err);
+      resolve(addresses);
+    });
+  });
+}

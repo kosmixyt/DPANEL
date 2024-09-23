@@ -1,10 +1,11 @@
 import { Column, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Host } from "./host";
-import { AppDataSource, UserData } from "..";
+import { AppDataSource, PUBLIC_SERVER_IP, Resolve4, Resolve6, UserData } from "..";
 import fs from "fs";
 import path from "path";
 import { Domain } from "./domain";
 import { SSL } from "./ssl";
+import dns from "dns"
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("increment")
@@ -85,20 +86,39 @@ export class User {
   async save() {
     await AppDataSource.manager.save(this);
   }
-  createHost(domains: Domain[]): () => void {
+  async allocDomain(name: string, emailDisabled = false): Promise<Domain> {
+    const domain = new Domain();
+    domain.name = name;
+    domain.emailDisabled = emailDisabled;
+    domain.user = this;
+
+
+    await domain.save();
+    return domain;
+  }
+  async createHost(domains: Domain[], withSSl = false): Promise<() => void> {
     for (const domain of domains) {
       if (domain.user.id !== this.id) {
         throw new Error("Domain does not belong to this user");
+      }
+      if (domain.nginxConfig) {
+        throw new Error("Domain already has a host");
       }
     }
     const host = new Host();
     host.domains = domains;
     for (const domain of domains) {
-      domain.nginxConfig = host;
+      const ips = (await Promise.all([Resolve4(domain.name), Resolve6(domain.name)])).flat()
+      if (!ips.includes(PUBLIC_SERVER_IP)) {
+        host.domains = [];
+        throw new Error("Domain does not resolve to this server");
+      }
     }
+    await Promise.all(domains.map((domain) => { domain.nginxConfig = host; return domain.save() }));
+    if (withSSl) await host.requestSSL(this)
     host.defaultConfig();
     host.assert();
-    host.save();
+    await host.save();
     return host.writeConfig.bind(host);
   }
 }

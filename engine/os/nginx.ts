@@ -43,6 +43,11 @@ export function BuildConfig(host: Host, user: User): string {
   for (const proxy of host.ReverseProxies) {
     config += `    location ${proxy.Path} {\n`;
     config += `        proxy_pass ${proxy.Target};\n`;
+    if (proxy.Timeout > 0) {
+      config += `        proxy_connect_timeout ${proxy.Timeout};\n`;
+      config += `        proxy_send_timeout ${proxy.Timeout};\n`;
+      config += `        proxy_read_timeout ${proxy.Timeout};\n`;
+    }
     config += `    }\n`;
   }
   for (const redirect of host.Redirects) {
@@ -53,7 +58,15 @@ export function BuildConfig(host: Host, user: User): string {
   for (const error of host.ErrorCodePages) {
     config += `    error_page ${error.Code} ${error.Page};\n`;
   }
+  if (host.Gzip) {
+    config += `    gzip on;\n`;
+    config += `    gzip_types ${host.GzipTypes};\n`;
+    config += `    gzip_min_length ${host.GzipMinLength};\n`;
+    config += `    gzip_comp_level ${host.GzipLevel};\n`;
+  }
+  config += `    client_max_body_size ${host.MaxBodySize};\n`;
   config += `}\n`;
+
   return config;
 }
 export async function ValidateConfig(host: Host, user: User): Promise<boolean> {

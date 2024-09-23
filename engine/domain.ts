@@ -4,6 +4,7 @@ import { Container } from "./container";
 import { SSL } from "./ssl";
 import { EmailController } from "./mail/email";
 import { User } from "./user";
+import { AppDataSource } from "..";
 
 @Entity()
 export class Domain {
@@ -29,5 +30,8 @@ export class Domain {
   }
   getController(): Host {
     return this.nginxConfig;
+  }
+  async save() {
+    await AppDataSource.manager.save(this);
   }
 }

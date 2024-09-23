@@ -19,7 +19,9 @@ export class SSL {
   host!: Host;
   @ManyToOne(() => Domain, (user) => user.ssl)
   domains!: Domain[];
-  constructor() {}
+  @ManyToOne(() => User, (user) => user.SSL)
+  user!: User;
+  constructor() { }
   static create(domains: Host[], user: User): SSL {
     return new SSL();
   }
@@ -28,12 +30,15 @@ export class SSL {
   }
   fullchain() {
     if (!this.host) throw new Error("No host found");
-    if (!this.host.user) throw new Error("No user found");
-    return path.join(this.host.user.ssl(), `${this.host.firstDomain().name}_fullchain.pem`);
+    if (!this.host.getUser()) throw new Error("No user found");
+    return path.join(this.User().ssl(), `${this.host.firstDomain().name}_fullchain.pem`);
   }
   privkey() {
     if (!this.host) throw new Error("No host found");
-    if (!this.host.user) throw new Error("No user found");
-    return path.join(this.host.user.ssl(), `${this.host.firstDomain().name}_privkey.pem`);
+    if (!this.User()) throw new Error("No user found");
+    return path.join(this.User().ssl(), `${this.host.firstDomain().name}_privkey.pem`);
+  }
+  User() {
+    return this.user
   }
 }

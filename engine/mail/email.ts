@@ -14,7 +14,7 @@ export class EmailController {
   @Column()
   Inited!: boolean;
 
-  async Init() {}
+  async Init() { }
 }
 @Entity()
 export class EmailAccount {
@@ -24,22 +24,49 @@ export class EmailAccount {
   controller!: EmailController;
   @Column()
   name!: string;
-  @Column()
-  alias!: string[];
+  @OneToMany(() => EmailAccount, (alias) => alias.controller)
+  alias!: EmailAlias[];
 
-  // multi domain alias not supported
-  static async CreateMail(name: string, alias: string[], controller: EmailController) {
-    for (const a of alias) {
+  static async CreateMail(name: string, stralias: string[], controller: EmailController) {
+    for (const a of stralias) {
       if (!a.endsWith(controller.Domain.name)) {
         throw new Error("Alias must be in the same domain");
       }
     }
     const account = new EmailAccount();
     account.name = name;
-    account.alias = alias;
     account.controller = controller;
+
+    for (const a of stralias) {
+      const instance = await EmailAlias.CreateAlias(a, account);
+    }
     await account.save();
     controller.accounts.push(account);
+  }
+  async save() {
+    await AppDataSource.manager.save(this);
+  }
+}
+
+@Entity()
+export class EmailAlias {
+  @PrimaryGeneratedColumn("increment")
+  id!: number;
+  @ManyToOne(() => EmailAccount, (acc) => acc.alias)
+  account!: EmailAccount;
+  @Column()
+  name!: string;
+
+  static async CreateAlias(alias: string, account: EmailAccount) {
+    if (!alias.endsWith(account.controller.Domain.name)) {
+      throw new Error("Alias must be in the same domain");
+    }
+    const a = new EmailAlias();
+    a.name = alias;
+    a.account = account;
+    await a.save();
+    account.alias.push(a);
+    return a;
   }
   async save() {
     await AppDataSource.manager.save(this);

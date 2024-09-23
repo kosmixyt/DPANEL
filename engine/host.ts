@@ -8,6 +8,7 @@ import { Domain } from "./domain";
 import fs from "fs";
 import path from "path";
 import { BuildConfig, ReloadConfig, ValidateConfig } from "./os/nginx";
+import { Container } from "./container";
 
 @Entity()
 export class Host {
@@ -15,8 +16,9 @@ export class Host {
   id!: number;
   @ManyToOne(() => User, (user) => user.domains)
   @Column()
+  allowDirectoryListing!: boolean;
+  @Column()
   indexes!: string;
-  user!: User;
   @ManyToOne(() => Domain, (domain) => domain.nginxConfig)
   domains!: Domain[];
   @OneToOne(() => SSL, (ssl) => ssl.host, { nullable: true })
@@ -33,6 +35,10 @@ export class Host {
   async save() {
     await AppDataSource.manager.save(this);
   }
+  defaultConfig() {
+    this.indexes = "index.html index.htm index.php";
+    this.allowDirectoryListing = false;
+  }
   static ValidName(name: string): boolean {
     const url = new URL(name);
     return url.hostname === name;
@@ -41,13 +47,13 @@ export class Host {
     return this.domains[0];
   }
   buildNginxConfig(): string {
-    return BuildConfig(this, this.user);
+    return BuildConfig(this, this.getUser());
   }
   root() {
-    return path.join(this.user.root(), this.firstDomain().name);
+    return path.join(this.getUser().root(), this.firstDomain().name);
   }
   assert() {
-    if (!this.user) throw new Error("No user found");
+    if (!this.firstDomain().user) throw new Error("No user found");
     const base_domain = this.domains[0];
     const required_paths = [this.root()];
     for (const required_path of required_paths) {
@@ -55,14 +61,24 @@ export class Host {
         fs.mkdirSync(required_path);
       }
     }
+    for (const domain of this.domains) {
+      if (domain.user.id != this.getUser().id) {
+        throw new Error("All domains must belong to the same user");
+      }
+    }
+  }
+  getUser() {
+    return this.firstDomain().user;
+  }
+  async ensurePreloaded(relations: string[]) {
   }
   async writeConfig(rollbackConfig?: string) {
     const config = this.buildNginxConfig();
     fs.writeFileSync(this.configPath(), config);
-    if (!ValidateConfig(this, this.user)) {
+    if (!ValidateConfig(this, this.getUser())) {
       if (rollbackConfig) {
         fs.writeFileSync(this.configPath(), rollbackConfig);
-        if (!ValidateConfig(this, this.user)) {
+        if (!ValidateConfig(this, this.getUser())) {
           console.log("Rollback failed");
           process.exit(100);
         }

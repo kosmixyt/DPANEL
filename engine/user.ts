@@ -4,6 +4,7 @@ import { AppDataSource, UserData } from "..";
 import fs from "fs";
 import path from "path";
 import { Domain } from "./domain";
+import { SSL } from "./ssl";
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("increment")
@@ -12,8 +13,10 @@ export class User {
   email!: string;
   @Column()
   name: string;
-  @OneToMany(() => Host, (host) => host.user)
-  domains!: Host[];
+  @OneToMany(() => Domain, (domain) => domain.user)
+  domains!: Domain[];
+  @OneToMany(() => SSL, (ssl) => ssl.user)
+  SSL!: SSL[];
 
   constructor(name: string) {
     this.name = name;
@@ -42,7 +45,7 @@ export class User {
   async getAllHosts(relations: string[] = []) {
     const hosts = AppDataSource.getRepository(Host).find({
       relations: relations,
-      where: { user: { id: this.id } },
+      where: {},
     });
     return hosts;
   }
@@ -82,15 +85,18 @@ export class User {
   async save() {
     await AppDataSource.manager.save(this);
   }
-  createHost(domains: string[]): () => void {
+  createHost(domains: Domain[]): () => void {
+    for (const domain of domains) {
+      if (domain.user.id !== this.id) {
+        throw new Error("Domain does not belong to this user");
+      }
+    }
     const host = new Host();
-    host.user = this;
-    host.domains = domains.map((domain) => {
-      const domain_instance = new Domain();
-      domain_instance.nginxConfig = host;
-      domain_instance.name = domain;
-      return domain_instance;
-    });
+    host.domains = domains;
+    for (const domain of domains) {
+      domain.nginxConfig = host;
+    }
+    host.defaultConfig();
     host.assert();
     host.save();
     return host.writeConfig.bind(host);

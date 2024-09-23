@@ -25,7 +25,7 @@ export const AppDataSource = new DataSource({
   type: "mysql",
   host: "localhost",
   synchronize: true,
-  port:  3306,
+  port: 3306,
   entities: [User, Host, SSL, PhpConfig, Container, Domain, ReverseProxy, ErrorCodePage, Redirect, DbPermission, Database, DbUser],
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,

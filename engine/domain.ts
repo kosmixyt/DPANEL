@@ -3,6 +3,7 @@ import { Host } from "./host";
 import { Container } from "./container";
 import { SSL } from "./ssl";
 import { EmailController } from "./mail/email";
+import { User } from "./user";
 
 @Entity()
 export class Domain {
@@ -14,6 +15,8 @@ export class Domain {
   nginxConfig!: Host;
   @OneToMany(() => SSL, (ssl) => ssl.domains, { nullable: true })
   ssl!: SSL;
+  @OneToMany(() => User, (user) => user.domains)
+  user!: User
   @Column()
   emailDisabled!: boolean;
   @OneToOne(() => EmailController, (controller) => controller.Domain)

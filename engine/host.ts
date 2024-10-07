@@ -3,10 +3,10 @@ import { User } from "./user";
 import { SSL } from "./ssl";
 import { AppDataSource, CertbotPath, NginxConfigPath } from "..";
 import { PhpConfig } from "./php";
-import child_process from "child_process";
+import * as child_process from "child_process";
 import { Domain } from "./domain";
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import { BuildConfig, ReloadConfig, ValidateConfig } from "./os/nginx";
 import { Container } from "./container";
 
@@ -80,8 +80,7 @@ export class Host {
   getUser() {
     return this.firstDomain().user;
   }
-  async ensurePreloaded(relations: string[]) {
-  }
+  async ensurePreloaded(relations: string[]) {}
   async writeConfig(rollbackConfig?: string) {
     const config = this.buildNginxConfig();
     fs.writeFileSync(this.configPath(), config);
@@ -161,9 +160,7 @@ export class ReverseProxy {
   host!: Host;
   @Column()
   Timeout!: number;
-
 }
-
 
 @Entity()
 export class ErrorCodePage {

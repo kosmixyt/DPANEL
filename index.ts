@@ -1,5 +1,5 @@
-import express from "express";
-import session from "express-session";
+import * as express from "express";
+import * as session from "express-session";
 import { DataSource } from "typeorm";
 import { User } from "./engine/user";
 import { ErrorCodePage, Host, Redirect, ReverseProxy } from "./engine/host";
@@ -11,7 +11,8 @@ import { Domain } from "./engine/domain";
 import { DbPermission } from "./engine/db/rights";
 import { Database } from "./engine/db/db";
 import { DbUser } from "./engine/db/user";
-import dns from "dns"
+import * as dns from "dns"
+import { UserRouter } from "./app/user";
 const app = express();
 app.use(
   session({
@@ -21,7 +22,12 @@ app.use(
     cookie: { secure: true },
   })
 );
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/user", UserRouter);
 
+
+console.log(process.env.DB_USERNAME, process.env.DB_PASSWORD)
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: "localhost",

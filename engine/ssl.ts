@@ -3,7 +3,7 @@ import { User } from "./user";
 import { AppDataSource } from "..";
 import { Host } from "./host";
 import { Domain } from "./domain";
-import path from "path";
+import * as path from "path";
 
 @Entity()
 export class SSL {

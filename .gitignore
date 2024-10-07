@@ -1,5 +1,7 @@
-node_modules
-# Keep environment variables out of version control
+.idea/
+.vscode/
+node_modules/
+build/
+tmp/
+temp/
 .env
-
-private.txt

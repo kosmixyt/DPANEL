@@ -1,11 +1,11 @@
 import { Column, Entity, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Host } from "./host";
 import { AppDataSource, PUBLIC_SERVER_IP, Resolve4, Resolve6, UserData } from "..";
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import { Domain } from "./domain";
 import { SSL } from "./ssl";
-import dns from "dns"
+import * as dns from "dns"
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("increment")

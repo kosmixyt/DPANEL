@@ -1,8 +1,8 @@
 import { NginxConfigPath } from "../..";
 import { Host } from "../host";
 import { User } from "../user";
-import child_process from "child_process";
-import path from "path";
+import * as child_process from "child_process";
+import * as path from "path";
 
 export function BuildConfig(host: Host, user: User): string {
   const required = [host.Php, host.SSL, host.ReverseProxies, host.Redirects, host.ErrorCodePages];
